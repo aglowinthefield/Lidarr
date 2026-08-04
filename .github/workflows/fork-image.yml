@@ -72,6 +72,25 @@ jobs:
             ${{ env.IMAGE }}:${{ env.LIDARRVERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Without these, buildx pushes an OCI index plus separate image and
+          # attestation manifests, so one build becomes three package versions —
+          # two of them untagged. Any "delete untagged versions" cleanup would
+          # then tear the pieces out from under the tag that references them.
+          # A single-platform homelab image gains nothing from attestations, so
+          # one build stays one version and pruning is safe.
+          provenance: false
+          sbom: false
+
+      # Every push publishes a version and each keeps its own 3.1.3.x tag, so
+      # nothing ages out on its own. Keep the last 10 builds as rollback points
+      # and drop the rest. The newest is never touched, so :mochi always resolves.
+      - name: Prune old image versions
+        if: github.event_name != 'pull_request'
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: lidarr
+          package-type: container
+          min-versions-to-keep: 10
 
       - name: Summary
         if: github.event_name != 'pull_request'
