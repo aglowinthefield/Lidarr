@@ -11,6 +11,7 @@ import * as captcha from './captchaActions';
 import * as commands from './commandActions';
 import * as customFilters from './customFilterActions';
 import * as history from './historyActions';
+import * as importListItems from './importListItemActions';
 import * as interactiveImportActions from './interactiveImportActions';
 import * as oAuth from './oAuthActions';
 import * as organizePreview from './organizePreviewActions';
@@ -43,6 +44,7 @@ export default [
   customFilters,
   trackFiles,
   history,
+  importListItems,
   interactiveImportActions,
   oAuth,
   organizePreview,

@@ -3,6 +3,7 @@ import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import BlocklistConnector from 'Activity/Blocklist/BlocklistConnector';
 import HistoryConnector from 'Activity/History/HistoryConnector';
+import ImportListItemsConnector from 'Activity/ImportListItems/ImportListItemsConnector';
 import QueueConnector from 'Activity/Queue/QueueConnector';
 import AlbumDetailsPageConnector from 'Album/Details/AlbumDetailsPageConnector';
 import ArtistDetailsPageConnector from 'Artist/Details/ArtistDetailsPageConnector';
@@ -142,6 +143,11 @@ function AppRoutes(props) {
       <Route
         path="/activity/blocklist"
         component={BlocklistConnector}
+      />
+
+      <Route
+        path="/activity/importlistitems"
+        component={ImportListItemsConnector}
       />
 
       {/*

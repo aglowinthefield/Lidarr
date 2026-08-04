@@ -59,6 +59,10 @@ const links = [
       {
         title: () => translate('Blocklist'),
         to: '/activity/blocklist'
+      },
+      {
+        title: () => translate('ImportListItems'),
+        to: '/activity/importlistitems'
       }
     ]
   },
