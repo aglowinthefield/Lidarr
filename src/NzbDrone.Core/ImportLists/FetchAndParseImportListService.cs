@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using NzbDrone.Common.TPL;
+using NzbDrone.Core.ImportLists.Items;
 using NzbDrone.Core.Parser.Model;
 
 namespace NzbDrone.Core.ImportLists
@@ -18,12 +19,14 @@ namespace NzbDrone.Core.ImportLists
     {
         private readonly IImportListFactory _importListFactory;
         private readonly IImportListStatusService _importListStatusService;
+        private readonly IImportListItemService _importListItemService;
         private readonly Logger _logger;
 
-        public FetchAndParseImportListService(IImportListFactory importListFactory, IImportListStatusService importListStatusService, Logger logger)
+        public FetchAndParseImportListService(IImportListFactory importListFactory, IImportListStatusService importListStatusService, IImportListItemService importListItemService, Logger logger)
         {
             _importListFactory = importListFactory;
             _importListStatusService = importListStatusService;
+            _importListItemService = importListItemService;
             _logger = logger;
         }
 
@@ -69,6 +72,8 @@ namespace NzbDrone.Core.ImportLists
                              lock (result)
                              {
                                  _logger.Debug("Found {0} reports from {1} ({2})", importListReports.Count, importList.Name, importListLocal.Definition.Name);
+
+                                 _importListItemService.SyncForList(importListLocal.Definition.Id, importListReports);
 
                                  result.AddRange(importListReports);
                              }
@@ -119,6 +124,8 @@ namespace NzbDrone.Core.ImportLists
                     lock (result)
                     {
                         _logger.Debug("Found {0} reports from {1} ({2})", importListReports.Count, importList.Name, importListLocal.Definition.Name);
+
+                        _importListItemService.SyncForList(importListLocal.Definition.Id, importListReports);
 
                         result.AddRange(importListReports);
                     }
