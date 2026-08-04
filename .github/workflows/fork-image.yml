@@ -1,0 +1,84 @@
+name: Fork image
+
+# Builds the fork's integration branch and publishes a container to GHCR.
+# Upstream builds on Azure Pipelines; this is ours and only ours, so it will
+# never conflict when syncing develop from upstream.
+
+on:
+  push:
+    branches: [mochi]
+  pull_request:
+    branches: [mochi]
+  workflow_dispatch:
+
+env:
+  MAJOR_VERSION: '3.1.3'
+  DOTNET_VERSION: '8.0.421'
+  NODE_VERSION: '20.x'
+  RID: linux-musl-x64
+  FRAMEWORK: net8.0
+  IMAGE: ghcr.io/${{ github.repository_owner }}/lidarr
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      # Offset past upstream's build counter so our versions always sort above
+      # whatever nightly shipped, and Lidarr never thinks it's behind.
+      - name: Compute version
+        run: |
+          echo "LIDARRVERSION=${MAJOR_VERSION}.$((9000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "BUILD_SOURCEBRANCHNAME=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: ./build.sh --backend --frontend --packages -r "$RID" -f "$FRAMEWORK"
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: distribution/docker/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            LIDARR_VERSION=${{ env.LIDARRVERSION }}
+            SOURCE_BRANCH=${{ github.ref_name }}
+          tags: |
+            ${{ env.IMAGE }}:${{ github.ref_name }}
+            ${{ env.IMAGE }}:${{ env.LIDARRVERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        if: github.event_name != 'pull_request'
+        run: |
+          {
+            echo "### Published \`${IMAGE}:${GITHUB_REF_NAME}\`"
+            echo
+            echo "- version: \`${LIDARRVERSION}\`"
+            echo "- commit: \`${GITHUB_SHA}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
