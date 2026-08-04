@@ -1,0 +1,8 @@
+# Feature branches that get merged into the integration branch, in order.
+# One per line. Blank lines and #-comments ignored.
+# Add a line here when you start a new feature; delete it when upstream merges it.
+fork/infra
+feat/mbid-in-album-select
+feat/discogs-import-list
+feat/musicbrainz-label-list
+feat/import-list-items
